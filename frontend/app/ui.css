@@ -1,0 +1,97 @@
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid #d8d5cc;
+  background: white;
+  padding: 9px 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+}
+
+.primary-button,
+.secondary-button,
+.danger-button,
+.icon-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.primary-button {
+  width: 100%;
+  background: #0f766e;
+  color: white;
+}
+
+.secondary-button {
+  background: white;
+  border-color: #d8d5cc;
+  color: #111827;
+}
+
+.danger-button {
+  background: #b42318;
+  color: white;
+}
+
+.icon-button {
+  background: white;
+  border-color: #d8d5cc;
+  color: #111827;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.run-row {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid #d8d5cc;
+  background: white;
+  padding: 10px;
+  text-align: left;
+}
+
+.run-row-active {
+  border-color: #0f766e;
+  background: #eef8f6;
+}
+
+.section-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+}
+
+.summary-box {
+  white-space: pre-wrap;
+  overflow: auto;
+  border: 1px solid #d8d5cc;
+  background: white;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
