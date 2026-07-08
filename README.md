@@ -1,56 +1,51 @@
 # Order Supervisor
 
-## Project Overview
+Order Supervisor is a proof-of-concept assignment project that demonstrates a long-running order supervision workflow using Temporal, FastAPI, Next.js, and Supabase.
 
-Order Supervisor is a working proof-of-concept for a long-running AI agent that oversees a single order from creation through completion. The system uses a Next.js frontend, a FastAPI backend, a Temporal workflow per order, and Supabase persistence to track run state, event history, compact memory, and final output.
+It is designed to show:
 
-The project is designed to demonstrate the core assignment requirements:
-
-- one long-running Temporal workflow per order
+- one Temporal workflow per order
 - event-driven wake/sleep behavior
-- agent reasoning and tool-like actions
-- compact memory and activity history
-- UI-based control over runs and instructions
-- workflow-owned completion when the order reaches a terminal state
+- agent reasoning and business actions
+- activity history and compact memory
+- UI-based run control and instruction injection
+- final workflow summaries with learnings and feedback
 
-## Prerequisites
+## 1. Prerequisites
 
-Before running the project, make sure you have:
+Install the following before you begin:
 
 - Python 3.11+
 - Node.js 20+
-- A Temporal dev server or Temporal CLI
-- A Supabase project
+- npm
+- Docker (recommended for Temporal) or the Temporal CLI
+- A Supabase account
 
-## Installation
+If you are on Windows, use PowerShell. If you are on macOS/Linux, use the terminal equivalent of the commands below.
 
-### 1. Clone and open the project
+## 2. Clone the project
 
 ```powershell
-cd d:\order supervisor
+git clone <your-repo-url>
+cd "order supervisor"
 ```
 
-### 2. Backend setup
+## 3. Backend setup
 
 ```powershell
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
+
+Create the backend environment file:
+
+```powershell
 Copy-Item .env.example .env
 ```
 
-### 3. Frontend setup
-
-```powershell
-cd ..\frontend
-npm install
-Copy-Item .env.example .env.local
-```
-
-## Environment Variables
-
-Create a backend environment file at `backend/.env`:
+Edit the new file and fill in your values:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
@@ -58,46 +53,58 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 TEMPORAL_ADDRESS=localhost:7233
 TEMPORAL_NAMESPACE=default
 TEMPORAL_TASK_QUEUE=order-supervisor-task-queue
-API_CORS_ORIGINS=http://localhost:3000
+API_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-Create a frontend environment file at `frontend/.env.local`:
+> Use the Supabase service-role key only on the backend. Do not expose it to the frontend.
+
+## 4. Frontend setup
+
+```powershell
+cd ..\frontend
+npm install
+Copy-Item .env.local.example .env.local
+```
+
+Edit the frontend environment file:
 
 ```env
-NEXT_PUBLIC_API_BASE=http://localhost:8000
+NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000
 ```
 
-Use the Supabase service-role key only on the backend. Do not expose it to the browser.
-
-## Database Setup
+## 5. Supabase setup
 
 1. Create a Supabase project.
 2. Open the SQL editor.
-3. Run the SQL from `supabase/schema.sql`.
-4. Confirm that the following tables exist:
-   - `supervisors`
-   - `runs`
-   - `activity_log`
+3. Run the SQL from [supabase/schema.sql](supabase/schema.sql).
+4. Confirm these tables exist:
+   - supervisors
+   - runs
+   - activity_log
 
-## Running the Application
+## 6. Start Temporal
 
-### 1. Start Temporal
-
-Option A: Temporal CLI
-
-```powershell
-& 'C:\Users\manis\Downloads\temporal_cli_1.7.2_windows_amd64\temporal.exe' server start-dev
-```
-
-Option B: Docker
+### Option A: Docker (recommended)
 
 ```powershell
 docker compose -f docker-compose.temporal.yml up
 ```
 
-The Temporal UI will be available at `http://localhost:8233`.
+### Option B: Temporal CLI
 
-### 2. Start the Temporal worker
+If you prefer the CLI, start it with:
+
+```powershell
+temporal server start-dev --db-filename .\temporal.db
+```
+
+The Temporal UI should be available at:
+
+- http://localhost:8233
+
+## 7. Start the worker
+
+In a separate terminal:
 
 ```powershell
 cd backend
@@ -105,57 +112,99 @@ cd backend
 python -m app.worker
 ```
 
-### 3. Start the FastAPI backend
+## 8. Start the backend API
+
+In another terminal:
 
 ```powershell
 cd backend
 .\.venv\Scripts\Activate.ps1
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 4. Start the frontend
+## 9. Start the frontend
+
+In another terminal:
 
 ```powershell
 cd frontend
-npm run dev
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open `http://localhost:3000`.
+Open the app at:
 
-## API Surface
+- http://127.0.0.1:3000
 
-The backend exposes the following endpoints:
+## 10. Demo flow
 
-- `POST /api/supervisors`
-- `GET /api/supervisors`
-- `GET /api/supervisors/{id}`
-- `POST /api/runs`
-- `GET /api/runs`
-- `GET /api/runs/{run_id}`
-- `POST /api/runs/{run_id}/events`
-- `POST /api/runs/{run_id}/instructions`
-- `POST /api/runs/{run_id}/interrupt`
-- `POST /api/runs/{run_id}/resume`
-- `POST /api/runs/{run_id}/terminate`
+A simple walkthrough for the assignment demo is:
 
-The API documentation is available at:
-
-- `http://localhost:8000/docs`
-- `http://localhost:8000/redoc`
-
-## Demo Walkthrough
-
-A simple user flow for the demo is:
-
-1. Create a supervisor template.
-2. Start a workflow for an order.
-3. Inject `payment_confirmed` and confirm it is recorded.
-4. Inject `shipment_delayed` and observe the wake decision, reasoning, logistics action, and internal note.
+1. Create a supervisor template from the UI.
+2. Start a workflow for a new order.
+3. Inject an event such as `shipment_delayed`.
+4. Observe the wake decision, reasoning, and business actions.
 5. Add a live instruction such as `Do not contact the customer without human review.`
-6. Inject `customer_message_received` and confirm that customer contact is blocked by the instruction.
+6. Inject a customer event and see how the instruction changes behavior.
 7. Pause and resume the run.
-8. Inject `delivered` to trigger workflow-owned completion and final output.
+8. Inject `delivered` to trigger workflow completion and final output.
 
-## Notes
+## 11. API endpoints
 
-The agent runtime is intentionally deterministic so the demo remains stable. It is isolated in `backend/app/agents/policy.py`, which makes it easy to replace later with an LLM-backed planner while keeping the same action contract.
+The backend exposes the following routes:
+
+- POST /api/supervisors
+- GET /api/supervisors
+- GET /api/supervisors/{supervisor_id}
+- POST /api/runs
+- GET /api/runs
+- GET /api/runs/{run_id}
+- POST /api/runs/{run_id}/events
+- POST /api/runs/{run_id}/instructions
+- POST /api/runs/{run_id}/interrupt
+- POST /api/runs/{run_id}/resume
+- POST /api/runs/{run_id}/terminate
+
+Swagger docs are available at:
+
+- http://127.0.0.1:8000/docs
+- http://127.0.0.1:8000/redoc
+
+## 12. Troubleshooting
+
+### “Failed to fetch” in the frontend
+
+This usually means the backend is not running or the frontend is pointing to the wrong API base.
+
+Check:
+
+```powershell
+curl http://127.0.0.1:8000/health
+```
+
+You should receive:
+
+```json
+{"ok":"true"}
+```
+
+If it does not work, start the backend and confirm that [frontend/.env.local](frontend/.env.local) points to the same host.
+
+### Temporal worker is not processing runs
+
+Make sure:
+
+- Temporal is running
+- the worker process is still active
+- the backend can reach Temporal at `localhost:7233`
+
+### Supabase errors
+
+Make sure:
+
+- the Supabase URL and service-role key are correct
+- the SQL from [supabase/schema.sql](supabase/schema.sql) has been applied
+- the backend `.env` file exists and is loaded
+
+## 13. Notes
+
+The agent runtime is intentionally deterministic so the demo is stable and easy to understand. The policy logic lives in [backend/app/agents/policy.py](backend/app/agents/policy.py), which makes it straightforward to replace with an LLM-backed planner later while keeping the same workflow contract.
